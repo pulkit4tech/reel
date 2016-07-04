@@ -1,5 +1,4 @@
 require 'celluloid/extras/hash'
-require 'reel/session/crypto'
 
 module Reel
   module Session
@@ -7,26 +6,25 @@ module Reel
 
       def initialize request
 
-        @store = Reel::Session.store
+        @store = initialize_store
         @request = request
-        @config = @request.session_config
-        crypto = Reel::Session::Crypto
+        @key = get_key
+        # getting value from key or generating new value
+        @val = get_val(@key) || {}
+      end
 
+      attr_reader :val
+
+      def get_key
+        @config = @request.session_config
         # extracting key from cookie
         if cookie = @request.headers[COOKIE_KEY]
           cookie.split(';').each do |all_cookie|
             array_val = all_cookie.split('=').map &:strip
-            # Should we check whether array_val.length > 1 before doing this? TODO
-            @key = crypto.decrypt(array_val[1],@config) if crypto.decrypt(array_val[0],@config) ==  @config[:session_name]
+            return array_val[1] if array_val[0] ==  @config[:session_name]
           end
         end
-        # getting value if key exist in our concurrent hash
-        @val = @store[@key]
-        # initialize new hash if key is not present in hash,cookie etc
-        @val ||= Hash.new
       end
-
-      attr_reader :val
 
       def generate_id
         Celluloid::Internals::UUID.generate
@@ -39,20 +37,35 @@ module Reel
           timer_hash[@key].reset if timer_hash[@key] && timer_hash[@key].respond_to?(:reset)
         else
           delete_time = @request.connection.server.after(@config[:session_length]){
-            @store.delete @key
+            delete_from_store @key
             timer_hash.delete @key
           }
           timer_hash[@key] = delete_time
         end
       end
 
-
       def save
           # merge key,value
           @key ||= generate_id
-          @store.merge!({@key=>@val})
+          store_save @key,@val
           start_timer
           @key
+      end
+
+      def initialize_store
+        raise NotImplementedError
+      end
+
+      def get_val key
+        raise NotImplementedError
+      end
+
+      def store_save key,val
+        raise NotImplementedError
+      end
+
+      def delete_from_store key
+        raise NotImplementedError
       end
 
     end

@@ -1,5 +1,5 @@
 require 'reel/session/store'
-require 'reel/session/crypto'
+require 'reel/session/store/pool'
 require 'celluloid/extras/hash'
 require 'time'
 
@@ -68,9 +68,8 @@ module Reel
 
       # make header to set cookie with uuid
       def make_header uuid=nil
-        crypto = Reel::Session::Crypto
-        COOKIE % [crypto.encrypt(session_config[:session_name],session_config),
-                  crypto.encrypt(uuid,session_config),
+        COOKIE % [session_config[:session_name],
+                  uuid,
                   session_expiry]
       end
     end
