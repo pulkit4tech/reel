@@ -1,5 +1,6 @@
 require 'multipart_parser/parser'
 require 'multipart_parser/reader'
+require 'tempfile'
 
 module Reel
   class Request
@@ -37,15 +38,18 @@ module Reel
 
         # configuring MultipartParser::Reader callbacks
         @reader.on_part do |part|
-          # Streaming API So each file blob will contain information regarding data, ended?
-          blob = {:data => "", :ended => false, :part => part }
+          # Streaming API So each file blob will contain information
+          # regarding: data,part (for header and other information) and ended?
+          blob = {:data => Tempfile.new(part.name), :ended => false, :part => part }
 
           # adding file blob associating it with part.name
           @files[part.name] = blob
 
           # registering callback
           part.on_data { |data_chunk| blob[:data] << data_chunk }
-          part.on_end { blob[:ended] = true }
+          part.on_end { blob[:ended] = true
+            blob[:data].rewind
+          }
         end
 
         @reader.on_error{|msg| warn msg }
