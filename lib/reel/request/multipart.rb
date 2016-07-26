@@ -49,6 +49,9 @@ module Reel
           part.on_data { |data_chunk| blob[:data] << data_chunk }
           part.on_end { blob[:ended] = true
             blob[:data].rewind
+            blob[:headers] = blob[:part].headers if blob[:part].headers
+            blob[:filename] = blob[:part].filename if blob[:part].filename
+            blob[:mime] = blob[:part].mime if blob[:part].mime
           }
         end
 
