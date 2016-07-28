@@ -19,7 +19,7 @@ module Reel
       @multipart = Reel::Request::Multipart.new body, boundary if boundary
       @multipart.is_a? Reel::Request::Multipart
     rescue => e
-      warn e
+      error e
       @multipart = false
     end
 
@@ -55,7 +55,10 @@ module Reel
           }
         end
 
-        @reader.on_error{|msg| warn msg }
+        @reader.on_error{ |msg|
+          error msg
+          raise MultipartParseError.new(400), msg
+        }
 
       end
 
