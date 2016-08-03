@@ -55,7 +55,7 @@ module Reel
           }
         end
 
-        @reader.on_error{|msg| warn msg }
+        @reader.on_error{|msg| raise MultipartParseError.new(400), msg }
 
       end
 
