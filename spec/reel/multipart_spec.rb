@@ -146,15 +146,17 @@ RSpec.describe Reel::Request::Multipart do
     raise ex if ex
   end
 
-  it "Parsing error for wrong boundary value" do
+  it "MultipartParseError for wrong boundary value" do
       ex = nil
 
       handler = proc do |connection|
         begin
           req = connection.request
-          expect(req.multipart? req.body).to eq true
-          expect(req.multipart.empty?).to eq true
-
+          begin
+            req.multipart
+          rescue => e
+            expect(e.is_a? Reel::MultipartParseError).to eq true
+          end
           req.respond :ok, response_body
         rescue => ex
         end
