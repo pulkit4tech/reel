@@ -54,8 +54,8 @@ module Reel
             #TODO : expose part information if needed
           }
         end
-
-        @reader.on_error{|msg| warn msg }
+        # Raising MultipartParseError with error code 400
+        @reader.on_error{|msg| raise MultipartParseError.new(400), msg }
 
       end
 
@@ -67,8 +67,8 @@ module Reel
         begin
           @body.each { |chunks| write chunks }
         rescue => e
-          warn e
           @files = {}
+          raise e
         end
         @files
       end

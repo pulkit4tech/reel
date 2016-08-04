@@ -42,4 +42,12 @@ module Reel
   # wrong state for a given operation
   class StateError < RuntimeError; end
 
+  # Multipart Parsing Error
+  # :error_code paramter can be used for responding purpose
+  class MultipartParseError < RequestError
+    def initialize error_code
+      @error_code = error_code
+    end
+    attr_reader :error_code
+  end
 end
